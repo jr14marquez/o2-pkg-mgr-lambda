@@ -1,0 +1,16 @@
+{
+  "name": "o2-pkg-mgr",
+  "version": "0.0.1",
+  "description": "An AWS Lambda function to put together O2",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "JR Marquez",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "rpm-builder": "^0.7.0",
+    "xml-js": "^1.6.8"
+  }
+}
