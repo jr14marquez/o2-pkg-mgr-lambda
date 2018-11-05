@@ -9,8 +9,8 @@ var AWS = require('aws-sdk');
 var s3 = new AWS.S3();
 const params = { Bucket: 'o2-pkg-manager' }
 
-console.log('ENV REPO: ',process.env.NEXUS_REPO)
-const nexusUrl = process.env.NEXUS_REPO
+//const nexusUrl = process.env.NEXUS_REPO
+const nexusUrl = 'https://nexus.ossim.io/nexus/content/repositories/omar-local-snapshot'
 
 // Set xml parser options
 const parseOpts = { compact: true, trim: true, textKey: 'text' }
@@ -24,6 +24,7 @@ const apps = {
 
 
 module.exports.hello = (event, context, callback) => {
+	console.log('params passed are: ', event.queryStringParameters)
 	// if app name is passed look it up
 	if(event.queryStringParameters && event.queryStringParameters.app) {
 		if(apps[event.queryStringParameters.app] != undefined) {
@@ -31,20 +32,45 @@ module.exports.hello = (event, context, callback) => {
 
 			//create streams
 			var prodYml = Fs.createWriteStream(`/tmp/${app.alias}-prod.yml`);
-			var devYml = Fs.createWriteStream(`/tmp/${app.alias}-dev.yml`);
+			/*var devYml = Fs.createWriteStream(`/tmp/${app.alias}-dev.yml`);
 			var httpd = Fs.createWriteStream(`/tmp/omar.conf`);
 			var env = Fs.createWriteStream(`/tmp/.env`);
 			var script = Fs.createWriteStream(`/tmp/omar-systemd.sh`);
-			var unit = Fs.createWriteStream(`/tmp/${app.alias}.service`);
+			var unit = Fs.createWriteStream(`/tmp/${app.alias}.service`);*/
 
 			// if omar-disk-cleanup then no yaml files
-			s3bucket.getObject({Bucket: 'o2-pkg-manager', Prefix: 'configs', Key: `${app.alias}-prod.yml` }).createReadStream().pipe(prodYml);
-			s3bucket.getObject({Bucket: 'o2-pkg-manager', Prefix: 'configs', Key: `${app.alias}-dev.yml` }).createReadStream().pipe(devYml);
-			s3bucket.getObject({Bucket: 'o2-pkg-manager', Prefix: 'configs', Key: 'omar.conf'}).createReadStream().pipe(httpd);
-			s3bucket.getObject({Bucket: 'o2-pkg-manager', Prefix: 'configs', Key: '.env'}).createReadStream().pipe(env);
-			s3bucket.getObject({Bucket: 'o2-pkg-manager', Prefix: 'scripts', Key: 'omar-systemd.sh'}).createReadStream().pipe(script);
+			s3.getObject({Bucket: 'o2-pkg-manager', Key: `configs/${app.alias}-prod.yml` })
+			.createReadStream()
+			.on('error', (e) => onError(e))
+			.pipe(prodYml)
+			.on('data', (data) => { console.log('receiving data',data) })
+			.on('end', () => { console.log('receiving ended') })
+			.on('error', (e) => onError(e))
+			/*s3.getObject({Bucket: 'o2-pkg-manager', Key: `configs/${app.alias}-dev.yml` }).createReadStream().pipe(devYml);
+			s3.getObject({Bucket: 'o2-pkg-manager', Key: 'configs/omar.conf'}).createReadStream().pipe(httpd);
+			s3.getObject({Bucket: 'o2-pkg-manager', Key: 'configs/.env'}).createReadStream().pipe(env);
+			s3.getObject({Bucket: 'o2-pkg-manager', Key: 'scripts/omar-systemd.sh'}).createReadStream().pipe(script);
 			// if omar-cmdln or omar-disk-cleanup then add timers
-			s3bucket.getObject({Bucket: 'o2-pkg-manager', Prefix: 'systemd', Key: `${app.alias}.service`}).createReadStream().pipe(unit);
+			s3.getObject({Bucket: 'o2-pkg-manager', Key: `systemd/${app.alias}.service`}).createReadStream().pipe(unit);*/
+
+			/*s3.getObject({Bucket: 'o2-pkg-manager', Key: `configs/${app.alias}-prod.yml` })
+			.createReadStream()
+			.on('error', (e) => {
+			  // handle aws s3 error from createReadStream
+			  console.log('error from s3 create read stream', e)
+			})
+			.pipe(prodYml)
+			.on('data', (data) => {
+			  // retrieve data
+			  console.log('receiving data',data)
+			})
+			.on('end', () => {
+			  // stream has ended
+			  console.log('stream has ended')
+			})
+			.on('error', (e) => {
+			 	console.log('error piping: ',e)
+			});*/
 
 
 		    
@@ -82,40 +108,36 @@ module.exports.hello = (event, context, callback) => {
 		    jarFile = `${app.artifactId}-${version}-${timestamp}-${buildNumber}.jar`
 		    var snapshotUrl = `${nexusUrl}/${app.groupId}/${app.artifactId}/${snapshot}/${jarFile}`
 
-		    // Begin downloading the latest(most up to date) jar file via stream
-		    // return Axios({ method: 'GET', url: snapshotUrl, responseType: 'stream'})
 		    console.log('bout to get snapshot url with last axios: ',snapshotUrl)
+
+		    // Begin downloading the latest(most up to date) jar file via stream
+		     //return Axios({ method: 'GET', url: snapshotUrl)
+		    
 		    return Axios({ method: 'GET', url: snapshotUrl, responseType: 'stream'})
 		  })
 		  .then(response => {
 		  	console.log('finished getting snapshot url and need to send back to user')
-		    const path = Path.resolve('/temp',jarFile)
+		    const path = Path.resolve('/','tmp',jarFile)
 		    // pipe the result stream into a file
 		    response.data.pipe(Fs.createWriteStream(path))
 		    response.data.on('end', () => {
 
 		      var rpmApp = { name: app.alias, version: version, release: `${timestamp}-${buildNumber}`, jar: jarFile}
 		      rpm.build(rpmApp)
-		      var res = {
-				  	statusCode: 200,
-				  	body: JSON.stringify({ message: `Hello JR M. nice to meet you!` })
-				  }
-			  	callback(null, res)
+		      .then(result => {
+		      	console.log('rpm result: ', result)
+		      	var res = {
+					  	statusCode: 200,
+					  	body: JSON.stringify({ message: `Hello JR M. nice to meet you!` })
+					  }
+				  	callback(null, res)
+		      })
+		      
 		    })
 
 		    response.data.on('error', () => {
 		      console.log('error downloading: ',app.artifactId)
-		    })
-
-		    /*var res = {
-			    statusCode: 200,
-			    "isBase64Encoded": true,
-				  body: response
-			  }
-			  callback(null, res)*/
-			
-			  
-			  
+		    })			  
 
 		  })
 		  .catch(onError)
@@ -123,22 +145,14 @@ module.exports.hello = (event, context, callback) => {
 
 		} else{
 			// throw error app doesnt exist
+			var res = {
+				statusCode: 200,
+				body: JSON.stringify({ message: `You're going to need to give me more than that. I can't read your mind.` })
+			}
+			callback(null, res)
 
 		}
 	}
-
-
-
-	
-	s3.listObjects(params).promise()
-		.then(data => {
-			console.log('data from s3: ',data)
-		})
-
-
-
- 
-
 
 
 	// Example return
