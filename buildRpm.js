@@ -8,17 +8,17 @@ console.log('in rpm build')
 		  version: app.version, //swapping for rpm naming convention. Package names it backwards
 		  release: app.release.replace('-','.'),
 		  buildArch: 'noarch',
-		  tempDir: '/tmp',
-		  rpmDest: '/tmp',
+		  tempDir: '/tmp/workspace',
+		  rpmDest: '/tmp/omar',
 		  requires: ['/usr/sbin/useradd', '/usr/bin/getent','/usr/sbin/userdel','httpd','java-1.8.0'],
 		  files: [
-		  	{cwd: '/temp', src: app.jar, dest: `/usr/share/omar/${app.name}`},
-		    {cwd: '/temp', src: `${app.name}-dev.yml`, dest: `/usr/share/omar/${app.name}`, directive: 'config(noreplace)'},
-		    {cwd: '/temp', src: `${app.name}-prod.yml`, dest: `/usr/share/omar/${app.name}`, directive: 'config(noreplace)'},
-		    {cwd: '/temp', src: `${app.name}.service`, dest: '/etc/systemd/system/', directive: 'config(noreplace)'},
-		    {cwd: '/temp', src: 'omar.conf', dest: '/etc/httpd/conf.d', directive: 'config(noreplace)'},
-		    {cwd: '/temp', src: '.env', dest: `/usr/share/omar`, directive: 'config(noreplace)'},	    
-		    {cwd: '/temp', src: 'omar-systemd.sh', dest: `/usr/share/omar`, directive: 'config(noreplace)'}
+		  	{cwd: '/tmp/omar', src: app.jar, dest: `/usr/share/omar/${app.name}`},
+		    {cwd: '/tmp/omar', src: `${app.name}-dev.yml`, dest: `/usr/share/omar/${app.name}`, directive: 'config(noreplace)'},
+		    {cwd: '/tmp/omar', src: `${app.name}-prod.yml`, dest: `/usr/share/omar/${app.name}`, directive: 'config(noreplace)'},
+		    {cwd: '/tmp/omar', src: `${app.name}.service`, dest: '/etc/systemd/system/', directive: 'config(noreplace)'},
+		    {cwd: '/tmp/omar', src: 'omar.conf', dest: '/etc/httpd/conf.d', directive: 'config(noreplace)'},
+		    {cwd: '/tmp/omar', src: '.env', dest: `/usr/share/omar`, directive: 'config(noreplace)'},	    
+		    {cwd: '/tmp/omar', src: 'omar-systemd.sh', dest: `/usr/share/omar`, directive: 'config(noreplace)'}
 		  ],
 		  preInstallScript: [
 		    '/usr/bin/getent group project-omar > /dev/null || /usr/sbin/groupadd -r project-omar',
@@ -35,7 +35,7 @@ console.log('in rpm build')
 		}
 
 		if(app.name == 'omar-cmdln' || app.name == 'omar-disk-cleanup'){
-			options.files.push({cwd: '/temp', src: `${app.name}.timer`, dest: `/etc/systemd/system`, directive: 'config(noreplace)'})
+			options.files.push({cwd: '/tmp/omar', src: `${app.name}.timer`, dest: `/etc/systemd/system`, directive: 'config(noreplace)'})
 			options.postInstallScript.push(`systemctl enable ${app.name}.timer`)
 		}
 

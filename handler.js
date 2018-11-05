@@ -29,9 +29,11 @@ module.exports.hello = (event, context, callback) => {
 	if(event.queryStringParameters && event.queryStringParameters.app) {
 		if(apps[event.queryStringParameters.app] != undefined) {
 			var app = apps[event.queryStringParameters.app]
+			Fs.mkdirSync('/tmp/omar');
+			Fs.mkdirSync('/tmp/workspace');
 
 			//create streams
-			var prodYml = Fs.createWriteStream(`/tmp/${app.alias}-prod.yml`);
+			var prodYml = Fs.createWriteStream(`/tmp/omar/${app.alias}-prod.yml`);
 			/*var devYml = Fs.createWriteStream(`/tmp/${app.alias}-dev.yml`);
 			var httpd = Fs.createWriteStream(`/tmp/omar.conf`);
 			var env = Fs.createWriteStream(`/tmp/.env`);
@@ -117,7 +119,7 @@ module.exports.hello = (event, context, callback) => {
 		  })
 		  .then(response => {
 		  	console.log('finished getting snapshot url and need to send back to user')
-		    const path = Path.resolve('/','tmp',jarFile)
+		    const path = Path.resolve('/tmp','omar',jarFile)
 		    // pipe the result stream into a file
 		    response.data.pipe(Fs.createWriteStream(path))
 		    response.data.on('end', () => {
