@@ -17,7 +17,7 @@ const apps = [
 
 /// used for testing on just one
 const mapps = [
-  { artifactId: 'omar-cmdln-app', groupId: 'omar/cmdln/app' }
+  { artifactId: 'omar-ui-app', groupId: 'io/ossim/omar/apps' },
 ]
 
 // Set xml parser options

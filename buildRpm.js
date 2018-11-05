@@ -8,13 +8,13 @@ var build = (app) => {
 	  buildArch: 'noarch',
 	  requires: ['/usr/sbin/useradd', '/usr/bin/getent','/usr/sbin/userdel','httpd','java-1.8.0'],
 	  files: [
-	  	{cwd: './omar', src: app.jar, dest: `/usr/share/omar/${app.name}`},
-	    {cwd: '/nfshome/gold/rmarquez/deployment/configs', src: `${app.name}-dev.yml`, dest: `/usr/share/omar/${app.name}`, directive: 'config(noreplace)'},
-	    {cwd: '/nfshome/gold/rmarquez/deployment/configs', src: `${app.name}-prod.yml`, dest: `/usr/share/omar/${app.name}`, directive: 'config(noreplace)'},
-	    {cwd: '/nfshome/gold/rmarquez/deployment/systemd', src: `${app.name}.service`, dest: '/etc/systemd/system/', directive: 'config(noreplace)'},
-	    {cwd: '/nfshome/gold/rmarquez/deployment/configs', src: 'omar.conf', dest: '/etc/httpd/conf.d', directive: 'config(noreplace)'},
-	    {cwd: '/nfshome/gold/rmarquez/deployment/configs', src: '.env', dest: `/usr/share/omar`, directive: 'config(noreplace)'},	    
-	    {cwd: '/nfshome/gold/rmarquez/deployment', src: 'omar-systemd.sh', dest: `/usr/share/omar`, directive: 'config(noreplace)'}
+	  	{cwd: '/temp', src: app.jar, dest: `/usr/share/omar/${app.name}`},
+	    {cwd: '/temp', src: `${app.name}-dev.yml`, dest: `/usr/share/omar/${app.name}`, directive: 'config(noreplace)'},
+	    {cwd: '/temp', src: `${app.name}-prod.yml`, dest: `/usr/share/omar/${app.name}`, directive: 'config(noreplace)'},
+	    {cwd: '/temp', src: `${app.name}.service`, dest: '/etc/systemd/system/', directive: 'config(noreplace)'},
+	    {cwd: '/temp', src: 'omar.conf', dest: '/etc/httpd/conf.d', directive: 'config(noreplace)'},
+	    {cwd: '/temp', src: '.env', dest: `/usr/share/omar`, directive: 'config(noreplace)'},	    
+	    {cwd: '/temp', src: 'omar-systemd.sh', dest: `/usr/share/omar`, directive: 'config(noreplace)'}
 	  ],
 	  preInstallScript: [
 	    '/usr/bin/getent group project-omar > /dev/null || /usr/sbin/groupadd -r project-omar',
@@ -31,7 +31,7 @@ var build = (app) => {
 	}
 
 	if(app.name == 'omar-cmdln' || app.name == 'omar-disk-cleanup'){
-		options.files.push({cwd: '/nfshome/gold/rmarquez/deployment/systemd', src: `${app.name}.timer`, dest: `/etc/systemd/system`, directive: 'config(noreplace)'})
+		options.files.push({cwd: '/temp', src: `${app.name}.timer`, dest: `/etc/systemd/system`, directive: 'config(noreplace)'})
 		options.postInstallScript.push(`systemctl enable ${app.name}.timer`)
 	}
 

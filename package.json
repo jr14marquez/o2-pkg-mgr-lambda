@@ -9,8 +9,13 @@
   "author": "JR Marquez",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.348.0",
     "axios": "^0.18.0",
     "rpm-builder": "^0.7.0",
     "xml-js": "^1.6.8"
+  },
+  "devDependencies": {
+    "serverless-apigw-binary": "^0.4.4",
+    "serverless-apigwy-binary": "^0.1.0"
   }
 }
