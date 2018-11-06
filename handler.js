@@ -8,6 +8,7 @@ var rpm = require('./buildRpm');
 var AWS = require('aws-sdk');
 var s3 = new AWS.S3();
 const params = { Bucket: 'o2-pkg-manager' }
+const { execSync } = require('child_process');
 
 //const nexusUrl = process.env.NEXUS_REPO
 const nexusUrl = 'https://nexus.ossim.io/nexus/content/repositories/omar-local-snapshot'
@@ -22,25 +23,22 @@ const apps = {
 	'omar-cmdln': { artifactId: 'omar-cmdln-app', alias: 'omar-cmdln', groupId: 'omar/cmdln/app' }
 }
 
-
 module.exports.hello = (event, context, callback) => {
 	console.log('params passed are: ', event.queryStringParameters)
+	
 	// if app name is passed look it up
 	if(event.queryStringParameters && event.queryStringParameters.app) {
 		if(apps[event.queryStringParameters.app] != undefined) {
 			var app = apps[event.queryStringParameters.app]
-			Fs.mkdirSync('/tmp/omar');
-			Fs.mkdirSync('/tmp/workspace');
 
 			//create streams
-			var prodYml = Fs.createWriteStream(`/tmp/omar/${app.alias}-prod.yml`);
-			/*var devYml = Fs.createWriteStream(`/tmp/${app.alias}-dev.yml`);
+			var prodYml = Fs.createWriteStream(`/tmp/${app.alias}-prod.yml`);
+			var devYml = Fs.createWriteStream(`/tmp/${app.alias}-dev.yml`);
 			var httpd = Fs.createWriteStream(`/tmp/omar.conf`);
 			var env = Fs.createWriteStream(`/tmp/.env`);
 			var script = Fs.createWriteStream(`/tmp/omar-systemd.sh`);
-			var unit = Fs.createWriteStream(`/tmp/${app.alias}.service`);*/
+			var unit = Fs.createWriteStream(`/tmp/${app.alias}.service`);
 
-			// if omar-disk-cleanup then no yaml files
 			s3.getObject({Bucket: 'o2-pkg-manager', Key: `configs/${app.alias}-prod.yml` })
 			.createReadStream()
 			.on('error', (e) => onError(e))
@@ -48,38 +46,42 @@ module.exports.hello = (event, context, callback) => {
 			.on('data', (data) => { console.log('receiving data',data) })
 			.on('end', () => { console.log('receiving ended') })
 			.on('error', (e) => onError(e))
-			/*s3.getObject({Bucket: 'o2-pkg-manager', Key: `configs/${app.alias}-dev.yml` }).createReadStream().pipe(devYml);
-			s3.getObject({Bucket: 'o2-pkg-manager', Key: 'configs/omar.conf'}).createReadStream().pipe(httpd);
-			s3.getObject({Bucket: 'o2-pkg-manager', Key: 'configs/.env'}).createReadStream().pipe(env);
-			s3.getObject({Bucket: 'o2-pkg-manager', Key: 'scripts/omar-systemd.sh'}).createReadStream().pipe(script);
-			// if omar-cmdln or omar-disk-cleanup then add timers
-			s3.getObject({Bucket: 'o2-pkg-manager', Key: `systemd/${app.alias}.service`}).createReadStream().pipe(unit);*/
 
-			/*s3.getObject({Bucket: 'o2-pkg-manager', Key: `configs/${app.alias}-prod.yml` })
+			s3.getObject({Bucket: 'o2-pkg-manager', Key: `configs/${app.alias}-dev.yml` })
 			.createReadStream()
-			.on('error', (e) => {
-			  // handle aws s3 error from createReadStream
-			  console.log('error from s3 create read stream', e)
-			})
-			.pipe(prodYml)
-			.on('data', (data) => {
-			  // retrieve data
-			  console.log('receiving data',data)
-			})
-			.on('end', () => {
-			  // stream has ended
-			  console.log('stream has ended')
-			})
-			.on('error', (e) => {
-			 	console.log('error piping: ',e)
-			});*/
+			.on('error', (e) => onError(e))
+			.pipe(devYml)
+			.on('end', () => { console.log('receiving ended') })
+			.on('error', (e) => onError(e))
 
+			s3.getObject({Bucket: 'o2-pkg-manager', Key: 'configs/omar.conf'})
+			.createReadStream()
+			.on('error', (e) => onError(e))
+			.pipe(httpd)
+			.on('end', () => { console.log('receiving ended') })
+			.on('error', (e) => onError(e))
 
-		    
-		  /*s3.listObjects({ Bucket: 'o2-pkg-manager', }).promise()
-			.then(data => {
-					console.log('data from s3: ',data)
-			})*/
+			s3.getObject({Bucket: 'o2-pkg-manager', Key: 'configs/.env'})
+			.createReadStream()
+			.on('error', (e) => onError(e))
+			.pipe(env)
+			.on('end', () => { console.log('receiving ended') })
+			.on('error', (e) => onError(e))
+
+			s3.getObject({Bucket: 'o2-pkg-manager', Key: 'scripts/omar-systemd.sh'})
+			.createReadStream()
+			.on('error', (e) => onError(e))
+			.pipe(script)
+			.on('end', () => { console.log('receiving ended') })
+			.on('error', (e) => onError(e))
+
+			// if omar-cmdln or omar-disk-cleanup then add timers
+			s3.getObject({Bucket: 'o2-pkg-manager', Key: `systemd/${app.alias}.service`})
+			.createReadStream()
+			.on('error', (e) => onError(e))
+			.pipe(unit)
+			.on('end', () => { console.log('receiving ended') })
+			.on('error', (e) => onError(e))
 
 			
 			var jarFile, version, timestamp, buildNumber
@@ -119,7 +121,7 @@ module.exports.hello = (event, context, callback) => {
 		  })
 		  .then(response => {
 		  	console.log('finished getting snapshot url and need to send back to user')
-		    const path = Path.resolve('/tmp','omar',jarFile)
+		    const path = Path.resolve('/','tmp',jarFile)
 		    // pipe the result stream into a file
 		    response.data.pipe(Fs.createWriteStream(path))
 		    response.data.on('end', () => {
@@ -129,10 +131,10 @@ module.exports.hello = (event, context, callback) => {
 		      .then(result => {
 		      	console.log('rpm result: ', result)
 		      	var res = {
-					  	statusCode: 200,
-					  	body: JSON.stringify({ message: `Hello JR M. nice to meet you!` })
-					  }
-				  	callback(null, res)
+					statusCode: 200,
+					body: fs.readFile(result, function(err, data) { console.log('data reading') });
+				}
+				callback(null, res)
 		      })
 		      
 		    })

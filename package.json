@@ -9,7 +9,6 @@
   "author": "JR Marquez",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.348.0",
     "axios": "^0.18.0",
     "rpm-builder": "^0.7.0",
     "xml-js": "^1.6.8"

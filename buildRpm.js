@@ -8,17 +8,17 @@ console.log('in rpm build')
 		  version: app.version, //swapping for rpm naming convention. Package names it backwards
 		  release: app.release.replace('-','.'),
 		  buildArch: 'noarch',
-		  tempDir: '/tmp/workspace',
-		  rpmDest: '/tmp/omar',
+		  tempDir: '/tmp',
+		  rpmDest: '/tmp',
 		  requires: ['/usr/sbin/useradd', '/usr/bin/getent','/usr/sbin/userdel','httpd','java-1.8.0'],
 		  files: [
-		  	{cwd: '/tmp/omar', src: app.jar, dest: `/usr/share/omar/${app.name}`},
-		    {cwd: '/tmp/omar', src: `${app.name}-dev.yml`, dest: `/usr/share/omar/${app.name}`, directive: 'config(noreplace)'},
-		    {cwd: '/tmp/omar', src: `${app.name}-prod.yml`, dest: `/usr/share/omar/${app.name}`, directive: 'config(noreplace)'},
-		    {cwd: '/tmp/omar', src: `${app.name}.service`, dest: '/etc/systemd/system/', directive: 'config(noreplace)'},
-		    {cwd: '/tmp/omar', src: 'omar.conf', dest: '/etc/httpd/conf.d', directive: 'config(noreplace)'},
-		    {cwd: '/tmp/omar', src: '.env', dest: `/usr/share/omar`, directive: 'config(noreplace)'},	    
-		    {cwd: '/tmp/omar', src: 'omar-systemd.sh', dest: `/usr/share/omar`, directive: 'config(noreplace)'}
+		  	{cwd: '/tmp', src: app.jar, dest: `/usr/share/omar/${app.name}`},
+		    {cwd: '/tmp', src: `${app.name}-dev.yml`, dest: `/usr/share/omar/${app.name}`, directive: 'config(noreplace)'},
+		    {cwd: '/tmp', src: `${app.name}-prod.yml`, dest: `/usr/share/omar/${app.name}`, directive: 'config(noreplace)'},
+		    {cwd: '/tmp', src: `${app.name}.service`, dest: '/etc/systemd/system/', directive: 'config(noreplace)'},
+		    {cwd: '/tmp', src: 'omar.conf', dest: '/etc/httpd/conf.d', directive: 'config(noreplace)'},
+		    {cwd: '/tmp', src: '.env', dest: `/usr/share/omar`, directive: 'config(noreplace)'},	    
+		    {cwd: '/tmp', src: 'omar-systemd.sh', dest: `/usr/share/omar`, directive: 'config(noreplace)'}
 		  ],
 		  preInstallScript: [
 		    '/usr/bin/getent group project-omar > /dev/null || /usr/sbin/groupadd -r project-omar',
