@@ -12,17 +12,8 @@
 # Happy Coding!
 
 service: o2-pkg-mgr-lambda # NOTE: update this with your service name
-app: o2-data-mgr
+app: o2-pkg-mgr
 tenant: jr14marquez
-
-plugins:
-  - serverless-apigw-binary
-  - serverless-apigwy-binary
-
-custom:
-  apigwBinary:
-    types:
-      - 'application/octet-stream'
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -31,7 +22,7 @@ custom:
 provider:
   name: aws
   runtime: nodejs8.10
-  timeout: 360 # optional, in seconds, default is 6
+  timeout: 30 # optional, in seconds, default is 6
   memorySize: 3000 # optional, in MB, default is 1024
 
 # you can overwrite defaults here
@@ -48,7 +39,11 @@ provider:
      Action:
        - "s3:ListBucket"
        - "s3:GetObject"
-     Resource: "arn:aws:s3:::o2-pkg-manager/*"
+       - "s3:PutObject"
+     Resource: [
+      "arn:aws:s3:::o2-pkg-mgr/*",
+      "arn:aws:s3:::o2-pkg-mgr"
+    ]
    - Effect: "Allow"
      Action:
        - "s3:PutObject"
@@ -62,6 +57,7 @@ provider:
 # you can define service wide environment variables here
   environment:
     NEXUS_REPO: https://nexus.ossim.io/nexus/content/repositories/omar-local-snapshot
+    BUCKET: o2-pkg-mgr
     HOME: /tmp
 
 # you can add packaging information here
