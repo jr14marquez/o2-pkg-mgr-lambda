@@ -76,8 +76,11 @@ functions:
       - http:
           path: first-endpoint
           method: GET
-          contentHandling: CONVERT_TO_BINARY
-
+          cors: true
+      - http:
+          path: first-endpoint
+          method: OPTIONS
+          cors: true
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details

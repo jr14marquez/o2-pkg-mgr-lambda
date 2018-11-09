@@ -43,7 +43,16 @@ module.exports.hello = (event, context, callback) => {
 			})
 			.then(data => {
 				if(data.found == true) {
-					callback(null, { statusCode: 200, body: JSON.stringify({ url: data.url }) })
+					console.log('previous rpm found so we send it back')
+					var res = {
+						statusCode: 200,
+						body: JSON.stringify({ url: data.url, name: app.alias, version: data.version, timestamp: data.timestamp, build: data.buildNumber }),
+						headers: {
+							'Access-Control-Allow-Origin': '*',
+							"Access-Control-Allow-Credentials" : false
+						}
+					}
+					callback(null, res)
 				}
 				else {
 					return util.getSnapshot(data.snapdata)
@@ -61,7 +70,16 @@ module.exports.hello = (event, context, callback) => {
 			})
 			.then(uploadData => {
 				if(!uploadData) return;
-				var res = { statusCode: 200, body: JSON.stringify({ message: uploadData }) }
+				console.log('uploadData: ',uploadData)
+				var res = {
+						statusCode: 200,
+						body: JSON.stringify({ message: uploadData }),
+						headers: {
+							'Access-Control-Allow-Origin': '*',
+							"Access-Control-Allow-Credentials" : false
+						}
+					}
+					//'
 				callback(null, res)	
 			})
 			.catch(err => onError(err))
