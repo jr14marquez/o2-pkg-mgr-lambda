@@ -7,6 +7,7 @@ const util = require('./lib/util')
 var rpm = require('./lib/buildRpm');
 var AWS = require('aws-sdk');
 var s3 = new AWS.S3();
+var { execSync } = require('child_process')
 
 const nexusUrl = process.env.NEXUS_REPO
 
@@ -21,9 +22,15 @@ const apps = {
 
 module.exports.hello = (event, context, callback) => {
 	console.log('params passed are: ', event.queryStringParameters)
-	console.log('context: ',context.callbackWaitsForEmptyEventLoop)
-	context.callbackWaitsForEmptyEventLoop = false;
-	console.log('context: ',context)
+
+	//Fs.mkdirSync('/tmp/workspace')
+	/*if(!Fs.existsSync('/tmp/workspace')) {
+		Fs.mkdirSync('/tmp/workspace')
+	}*/
+
+	console.log(execSync('ls -lart /tmp').toString())
+	console.log(execSync('du -h /tmp').toString())
+	console.log(execSync('free -m').toString())
 	
 	// if app name is passed look it up
 	if(event.queryStringParameters && event.queryStringParameters.app) {

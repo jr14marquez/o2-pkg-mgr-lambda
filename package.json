@@ -10,7 +10,13 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.18.0",
+    "chalk": "^2.4.1",
+    "dateformat": "^3.0.3",
+    "fs-extra": "^7.0.1",
+    "globby": "^8.0.1",
+    "lodash": "^4.17.11",
     "rpm-builder": "^0.7.0",
+    "shortid": "^2.2.14",
     "xml-js": "^1.6.8"
   },
   "devDependencies": {
