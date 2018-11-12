@@ -1,6 +1,6 @@
 'use strict';
 
-const Fs = require('fs')  
+const fsx = require('fs-extra')  
 const Path = require('path')  
 const Axios = require('axios');
 const util = require('./lib/util')
@@ -23,37 +23,36 @@ const apps = {
 module.exports.hello = (event, context, callback) => {
 	console.log('params passed are: ', event.queryStringParameters)
 
-	//Fs.mkdirSync('/tmp/workspace')
-	/*if(!Fs.existsSync('/tmp/workspace')) {
-		Fs.mkdirSync('/tmp/workspace')
-	}*/
-
-	console.log(execSync('ls -lart /tmp').toString())
-	console.log(execSync('du -h /tmp').toString())
-	console.log(execSync('free -m').toString())
+	console.log(`Beginning listing: ${execSync('ls -lart /tmp').toString()}`)
 	
 	// if app name is passed look it up
 	if(event.queryStringParameters && event.queryStringParameters.app) {
 		if(apps[event.queryStringParameters.app] != undefined) {
 			var app = apps[event.queryStringParameters.app]
+			var appData = { version: '', timestamp: '', buildNumber: '', rpm: '' , key: '' }
 			var home = event.queryStringParameters.home
 			var user = event.queryStringParameters.user
 			var group = event.queryStringParameters.group
 
-			util.getConfs(s3,app)
 			util.getSnapshotData(app)
 			.then(data => {
 				console.log('after getting snapshot url with data: ',data)
+				appData.version = data.version
+				appData.timestamp = data.timestamp
+				appData.buildNumber = data.buildNumber
 				// check s3 if there is already an rpm matching same params and latest snapshot
 				var key = `rpms/${user}:${group}${home}/${app.alias}-${data.version}-${data.timestamp}.${data.buildNumber}.noarch.rpm`
+				appData.key = key
 				return util.headObject(s3, key, data)
 			})
 			.then(data => {
 				if(data.found == true) {
 					console.log('previous rpm found so we send it back')
+					console.log('data: ',data)
+
 					var res = {
 						statusCode: 200,
-						body: JSON.stringify({ url: data.url, name: app.alias, version: data.version, timestamp: data.timestamp, build: data.buildNumber }),
+						body: JSON.stringify({ url: data.url, name: app.alias, version: appData.version, timestamp: appData.timestamp, buildNumber: appData.buildNumber }),
 						headers: {
 							'Access-Control-Allow-Origin': '*',
 							"Access-Control-Allow-Credentials" : false
@@ -62,6 +61,7 @@ module.exports.hello = (event, context, callback) => {
 					callback(null, res)
 				}
 				else {
+					util.getConfs(s3,app)
 					return util.getSnapshot(data.snapdata)
 				}
 			})
@@ -72,15 +72,29 @@ module.exports.hello = (event, context, callback) => {
 			})
 			.then(rpmdata => {
 				if(!rpmdata) return;
-				var params = {Bucket: process.env.BUCKET, Key: `rpms/${user}:${group}${home}/${rpmdata.split('/')[2]}`, Body: Fs.createReadStream(rpmdata)};
+				appData.rpm = rpmdata
+				var params = {Bucket: process.env.BUCKET, Key: `rpms/${user}:${group}${home}/${rpmdata.split('/')[2]}`, Body: fsx.createReadStream(rpmdata)};
 				return s3.upload(params).promise()
 			})
 			.then(uploadData => {
+				//console.log(`Last listing: ${execSync('ls -lart /tmp/rpmbuild').toString()}`)
+				
+
 				if(!uploadData) return;
+				//remove rpm file from file system
+				fsx.remove(appData.rpm)
+				.then(() => { 
+					console.log('successfully remove rpm file from container!') 
+					console.log(`Last listing2 of temp: ${execSync('ls -lart /tmp').toString()}`)
+				})
+				.catch(err => { console.error(err)})
+
 				console.log('uploadData: ',uploadData)
+				var url = `https://s3.amazonaws.com/${process.env.BUCKET}/${appData.key}`
+				var body = { url: url, name: app.alias, version: appData.version, timestamp: appData.timestamp, buildNumber: appData.buildNumber }
 				var res = {
 						statusCode: 200,
-						body: JSON.stringify({ message: uploadData }),
+						body: JSON.stringify(body),
 						headers: {
 							'Access-Control-Allow-Origin': '*',
 							"Access-Control-Allow-Credentials" : false
