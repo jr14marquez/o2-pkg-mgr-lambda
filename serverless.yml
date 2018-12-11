@@ -74,11 +74,11 @@ functions:
     handler: handler.hello
     events:
       - http:
-          path: first-endpoint
+          path: getApp
           method: GET
           cors: true
       - http:
-          path: first-endpoint
+          path: getApp
           method: OPTIONS
           cors: true
 #    The following are a few example events you can configure
