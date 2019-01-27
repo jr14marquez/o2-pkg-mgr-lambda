@@ -53,10 +53,10 @@ provider:
          - - "arn:aws:s3:::"
            - "Ref" : "ServerlessDeploymentBucket"
            - "/*"
-
 # you can define service wide environment variables here
   environment:
-    NEXUS_REPO: https://nexus.ossim.io/nexus/content/repositories/omar-local-snapshot
+    NEXUS_REPO: https://nexus.ossim.io/nexus/content/repositories/omar-local-release
+    NEXUS_REPO_DEV: https://nexus.ossim.io/nexus/content/repositories/omar-local-snapshot
     BUCKET: o2-pkg-mgr
     HOME: /tmp
 
