@@ -4,7 +4,7 @@
   "description": "An AWS Lambda function to put together O2",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "sls invoke local -f hello -p test/data.json"
   },
   "author": "JR Marquez",
   "license": "ISC",

@@ -11,7 +11,6 @@ var { execSync } = require('child_process')
 
 const nexusUrl = process.env.NEXUS_REPO
 
-
 const apps = {
 	'omar-ui': { artifactId: 'omar-ui-app', alias: 'omar-ui', groupId: 'io/ossim/omar/apps' },
 	'omar-services': { artifactId: 'omar-services-app', alias: 'omar-services', groupId: 'io/ossim/omar/apps' },
@@ -29,7 +28,7 @@ module.exports.hello = (event, context, callback) => {
 	if(event.queryStringParameters && event.queryStringParameters.app) {
 		if(apps[event.queryStringParameters.app] != undefined) {
 			var app = apps[event.queryStringParameters.app]
-			var appData = { version: '', timestamp: '', buildNumber: '', rpm: '' , key: '' }
+			var appData = { version: '', release: '', rpm: '' , key: '' }
 			var home = event.queryStringParameters.home
 			var user = event.queryStringParameters.user
 			var group = event.queryStringParameters.group
@@ -38,10 +37,11 @@ module.exports.hello = (event, context, callback) => {
 			.then(data => {
 				console.log('after getting snapshot url with data: ',data)
 				appData.version = data.version
-				appData.timestamp = data.timestamp
-				appData.buildNumber = data.buildNumber
+				appData.release = data.release
+			
 				// check s3 if there is already an rpm matching same params and latest snapshot
-				var key = `rpms/${user}:${group}${home}/${app.alias}-${data.version}-${data.timestamp}.${data.buildNumber}.noarch.rpm`
+				var key = `rpms/${user}:${group}${home}/${app.alias}-${data.version}-${data.release}.noarch.rpm`
+				console.log('looking for key: ',key)
 				appData.key = key
 				return util.headObject(s3, key, data)
 			})
@@ -52,7 +52,7 @@ module.exports.hello = (event, context, callback) => {
 
 					var res = {
 						statusCode: 200,
-						body: JSON.stringify({ url: data.url, name: app.alias, version: appData.version, timestamp: appData.timestamp, buildNumber: appData.buildNumber }),
+						body: JSON.stringify({ url: data.url, name: app.alias, version: appData.version, release: appData.release }),
 						headers: {
 							'Access-Control-Allow-Origin': '*',
 							"Access-Control-Allow-Credentials" : false
@@ -62,12 +62,13 @@ module.exports.hello = (event, context, callback) => {
 				}
 				else {
 					util.getConfs(s3,app)
-					return util.getSnapshot(data.snapdata)
+					return util.getSnapshot(data)
 				}
 			})
 			.then(snapdata => {
+				console.log('snapdata here: ',snapdata)
 				if(!snapdata) return;
-				var rpmApp = { name: app.alias, user: user, home: home, group: group, version: snapdata.version, release: `${snapdata.timestamp}-${snapdata.buildNumber}`, jar: snapdata.jarFile}
+				var rpmApp = { name: app.alias, user: user, home: home, group: group, version: snapdata.version, release: `${snapdata.release}`, jar: snapdata.jarFile}
 				return rpm.build(rpmApp)
 			})
 			.then(rpmdata => {
@@ -91,7 +92,7 @@ module.exports.hello = (event, context, callback) => {
 
 				console.log('uploadData: ',uploadData)
 				var url = `https://s3.amazonaws.com/${process.env.BUCKET}/${appData.key}`
-				var body = { url: url, name: app.alias, version: appData.version, timestamp: appData.timestamp, buildNumber: appData.buildNumber }
+				var body = { url: url, name: app.alias, version: appData.version, timestamp: appData.relase, buildNumber: appData.release }
 				var res = {
 						statusCode: 200,
 						body: JSON.stringify(body),

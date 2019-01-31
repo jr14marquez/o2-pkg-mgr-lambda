@@ -1,0 +1,8 @@
+{
+	"queryStringParameters": {
+		"app": "omar-ui",
+		"home": "/usr/share/omar",
+		"user": "omar",
+		"group": "project-omar"
+	}
+}
